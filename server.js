@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
-const Web3 = require('web3');
+const { Web3 } = require('web3');  // <-- ИСПРАВЛЕНО: импорт через фигурные скобки
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -101,15 +101,14 @@ app.post('/api/buy-eth', async (req, res) => {
     res.json({ success: true, zuz_amount });
 });
 
-// Покупка за USDT (через агрегатор)
+// Покупка за USDT (заглушка, позже доработаем)
 app.post('/api/buy-usdt', async (req, res) => {
     const { telegram_id, usdt_amount, tx_hash } = req.body;
     if (!usdt_amount || usdt_amount < 10) {
         return res.status(400).json({ error: 'Минимум 10 USDT' });
     }
     
-    // Получаем курс ETH/USDT (пока заглушка)
-    const eth_usd_rate = 3500; // TODO: заменить на реальный курс через Coingecko
+    const eth_usd_rate = 3500; // TODO: заменить на реальный курс
     const eth_amount = usdt_amount / eth_usd_rate;
     const zuz_amount = eth_amount / TOKEN_PRICE_ETH;
     
@@ -138,7 +137,7 @@ app.get('/api/referrals/:telegram_id', async (req, res) => {
     res.json({ referrals, count: referrals.length, total });
 });
 
-// Курс ETH/USDT (заглушка, можно заменить на реальный API)
+// Цена
 app.get('/api/price', (req, res) => {
     res.json({ eth_usd: 3500, zuz_usd: 3500 * TOKEN_PRICE_ETH });
 });
