@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
-const { Web3 } = require('web3');  // <-- ИСПРАВЛЕНО: импорт через фигурные скобки
+const { Web3 } = require('web3');  // <-- ИСПРАВЛЕНО: деструктуризация для версий 4.x
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -69,7 +69,6 @@ app.post('/api/buy-eth', async (req, res) => {
     
     const zuz_amount = eth_amount / TOKEN_PRICE_ETH;
     
-    // Обновляем баланс
     const { data: user } = await supabase
         .from('users')
         .select('balance_zuz')
@@ -101,7 +100,6 @@ app.post('/api/buy-eth', async (req, res) => {
     res.json({ success: true, zuz_amount });
 });
 
-// Покупка за USDT (заглушка, позже доработаем)
 app.post('/api/buy-usdt', async (req, res) => {
     const { telegram_id, usdt_amount, tx_hash } = req.body;
     if (!usdt_amount || usdt_amount < 10) {
@@ -124,7 +122,6 @@ app.post('/api/buy-usdt', async (req, res) => {
     res.json({ success: true, zuz_amount });
 });
 
-// Реферальная статистика
 app.get('/api/referrals/:telegram_id', async (req, res) => {
     const { data: referrals, error } = await supabase
         .from('referrals')
@@ -137,7 +134,6 @@ app.get('/api/referrals/:telegram_id', async (req, res) => {
     res.json({ referrals, count: referrals.length, total });
 });
 
-// Цена
 app.get('/api/price', (req, res) => {
     res.json({ eth_usd: 3500, zuz_usd: 3500 * TOKEN_PRICE_ETH });
 });
