@@ -3,89 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>ZUZ Universe | Mini App</title>
+    <title>ZUZIM Swap | Стейкинг</title>
     <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: #0A0A0A; color: white; font-family: 'Inter', system-ui, -apple-system, sans-serif; padding: 16px; padding-bottom: 90px; }
+        body { background: #0A0A0A; color: white; font-family: 'Inter', system-ui, sans-serif; padding: 16px; padding-bottom: 90px; }
         .container { max-width: 500px; margin: 0 auto; }
-        
-        /* Карточки */
         .card { background: #1A1A1A; border-radius: 28px; padding: 20px; margin-bottom: 16px; border: 1px solid #2A2A2A; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
         .gold-text { color: #D4AF37; font-weight: bold; }
         .balance-big { font-size: 36px; font-weight: bold; color: #D4AF37; line-height: 1; }
         .eye-icon { cursor: pointer; padding: 8px; font-size: 20px; }
         .address { font-family: monospace; font-size: 12px; background: #0A0A0A; padding: 12px; border-radius: 60px; word-break: break-all; text-align: center; margin-top: 12px; }
-        
-        /* 3 верхние кнопки (реварды, участники, партнёры) */
         .top-stats { display: flex; gap: 12px; margin-bottom: 20px; }
         .stat-card { background: #1A1A1A; border-radius: 24px; padding: 12px; text-align: center; flex: 1; border: 1px solid #2A2A2A; cursor: pointer; }
         .stat-value { font-size: 24px; font-weight: bold; color: #D4AF37; }
         .stat-label { font-size: 11px; color: #888; margin-top: 4px; }
-        
-        /* Сетка 4 кнопки (8 штук будет в две строки) */
         .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
         .action-card { background: #1A1A1A; border: 1px solid #2A2A2A; border-radius: 20px; padding: 12px 4px; text-align: center; cursor: pointer; transition: 0.1s; }
         .action-card:active { transform: scale(0.96); border-color: #D4AF37; }
         .action-icon { font-size: 28px; margin-bottom: 6px; }
         .action-label { font-size: 10px; color: #D4AF37; font-weight: 500; }
-        
-        /* Вкладки */
         .tabs { display: flex; gap: 8px; background: #1A1A1A; padding: 8px; border-radius: 60px; margin: 20px 0 16px; }
         .tab { flex: 1; text-align: center; padding: 10px; border-radius: 40px; cursor: pointer; font-size: 14px; font-weight: 500; }
         .tab.active { background: #D4AF37; color: #0A0A0A; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        
-        /* Таблица партнёрских уровней */
-        .level-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
-        .level-table th, .level-table td { padding: 8px; text-align: left; border-bottom: 1px solid #2A2A2A; }
-        .level-table th { color: #D4AF37; }
-        .expand-btn { cursor: pointer; color: #D4AF37; font-size: 12px; margin: 10px 0; display: inline-block; }
-        
-        .progress-bar { background: #333; height: 6px; border-radius: 3px; margin: 12px 0; overflow: hidden; }
-        .progress-fill { background: linear-gradient(90deg, #D4AF37, #FFD700); height: 100%; width: 0%; }
-        
         button { background: linear-gradient(135deg, #D4AF37, #B8860B); border: none; padding: 12px 20px; border-radius: 60px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 8px; }
         .btn-outline { background: transparent; border: 1px solid #D4AF37; color: #D4AF37; }
-        
-        .footer-banner { background: linear-gradient(90deg, #D4AF37, #FFD700); color: #0A0A0A; text-align: center; padding: 14px; border-radius: 40px; font-weight: bold; margin-top: 20px; cursor: pointer; }
         .toast { position: fixed; bottom: 30px; left: 20px; right: 20px; background: #D4AF37; color: #0A0A0A; text-align: center; padding: 12px; border-radius: 40px; z-index: 9999; display: none; font-weight: bold; }
+        .stake-row { margin-top: 12px; padding-top: 12px; border-top: 1px solid #2A2A2A; }
     </style>
 </head>
 <body>
 <div class="container">
-    <!-- ШАПКА: логотип + кнопка кошелька -->
     <div class="flex-between" style="margin-bottom: 20px;">
         <div style="display: flex; align-items: center; gap: 8px;">
             <div style="width: 40px; height: 40px; background: #000; border: 2px solid #D4AF37; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
                 <span style="color: #D4AF37; font-weight: bold;">Z</span>
             </div>
-            <div><strong>ZUZ UNIVERSE</strong><br><span style="font-size: 10px; color: #888;">Time > Money</span></div>
+            <div><strong>ZUZIM SWAP</strong><br><span style="font-size: 10px; color: #888;">Staking 25% APY</span></div>
         </div>
         <button id="connectBtn" style="width: auto; padding: 8px 16px; margin: 0; background: #2A2A2A; color: #D4AF37; border: 1px solid #D4AF37;">🔌 Кошелёк</button>
     </div>
 
-    <!-- ТОП 3: Реварды / Участники / Партнёры -->
     <div class="top-stats">
         <div class="stat-card" id="rewardsBtn"><div class="stat-value" id="rewardsAmount">0</div><div class="stat-label">Реварды (ZUZ)</div></div>
         <div class="stat-card" id="membersBtn"><div class="stat-value" id="membersCount">0</div><div class="stat-label">Участники</div></div>
         <div class="stat-card" id="partnersBtn"><div class="stat-value" id="partnersCount">0</div><div class="stat-label">Партнёры</div></div>
     </div>
 
-    <!-- КАРТОЧКА АККАУНТА (адрес + баланс + стейкинг) -->
     <div class="card">
         <div class="flex-between"><span>👤 Аккаунт</span><span id="copyAddr" style="cursor: pointer;">📋 Копировать</span><span id="qrAddr" style="cursor: pointer;">📱 QR</span></div>
         <div class="address" id="walletAddressShow">Не подключён</div>
         <div class="flex-between" style="margin-top: 16px;"><span>💰 Баланс ZUZ</span><span class="eye-icon" id="toggleBalance">👁️</span></div>
         <div class="balance-big" id="zuzBalanceMain">0</div>
-        <div class="progress-bar"><div class="progress-fill" id="sageProgress"></div></div>
-        <div class="flex-between"><span id="currentRank">🌱 Novice</span><span id="nextRank">→ 1000 ZUZ</span></div>
-        <div class="flex-between" style="margin-top: 12px;"><span>🎁 Награды стейкинга</span><span id="stakingRewards">0 ZUZ</span></div>
+        <div class="stake-row">
+            <div class="flex-between"><span>🔒 Застейкано ZUZ</span><span id="stakedAmount">0</span></div>
+            <div class="flex-between"><span>🎁 Награды стейкинга</span><span id="stakingRewardsMain">0</span></div>
+        </div>
     </div>
 
-    <!-- 8 КНОПОК -->
     <div class="grid-4">
         <div class="action-card" id="stakeBtn"><div class="action-icon">🔒</div><div class="action-label">Стейкинг</div></div>
         <div class="action-card" id="liquidityBtn"><div class="action-icon">💧</div><div class="action-label">Пул ликвидности</div></div>
@@ -97,13 +75,11 @@
         <div class="action-card" id="partnerRewardBtn"><div class="action-icon">🤝</div><div class="action-label">Ревард парт. прог.</div></div>
     </div>
 
-    <!-- ВЫВОД СТЕЙКИНГА + ОБЩИЙ БАЛАНС $ -->
     <div class="card">
         <div class="flex-between"><span>📤 Вывод стейкинга</span><button id="withdrawStakeBtn" style="width: auto; padding: 6px 14px; margin: 0;">Вывести</button></div>
         <div class="flex-between" style="margin-top: 12px;"><span>💵 Общий баланс</span><span class="balance-big" style="font-size: 20px;" id="totalUSD">$0.00</span><span class="eye-icon" id="toggleTotalBalance">👁️</span></div>
     </div>
 
-    <!-- ВКЛАДКИ: Токены / NFT / Активность / Партнёры -->
     <div class="tabs">
         <div class="tab active" data-tab="tokens">Токены</div>
         <div class="tab" data-tab="nft">NFT</div>
@@ -119,16 +95,16 @@
     <div id="activityTab" class="tab-content"><div class="card" id="activityList">📭 Нет активности</div></div>
     <div id="partnersTab" class="tab-content"><div class="card" id="partnersContent"></div></div>
 
-    <div class="footer-banner" id="siteBanner">⚡ Стань частью экосистемы → zuzim-universe.com</div>
+    <div class="footer-banner" id="siteBanner" style="background: linear-gradient(90deg, #D4AF37, #FFD700); color: #0A0A0A; text-align: center; padding: 14px; border-radius: 40px; font-weight: bold; margin-top: 20px; cursor: pointer;">⚡ Стань частью экосистемы → zuzim-universe.com</div>
 </div>
 <div id="toast" class="toast"></div>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
-    // ========== 1. SUPABASE (твои ключи) ==========
+    // === SUPABASE ===
     const SUPABASE_URL = 'https://mmrxyvhcwlpspmclwzgr.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_XDoCA-YtMZAYfX_DfQlsbA_eFye94-G';
     let supabase;
-    try { supabase = window.supabaseJs?.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) { console.log('supabase not loaded'); }
+    try { supabase = window.supabaseJs?.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) { console.log('Supabase not loaded'); }
 
     let tg = window.Telegram?.WebApp;
     if (tg) { tg.ready(); tg.expand(); }
@@ -136,42 +112,49 @@
     let username = tg?.initDataUnsafe?.user?.username || tg?.initDataUnsafe?.user?.first_name || "Игрок";
 
     let web3 = null, account = null;
-    let userBalance = 0, stakingBalance = 0, stakingRewards = 0, totalReferrals = 0, totalEarned = 0;
+    let userBalance = 0, stakedBalance = 0, stakingRewards = 0, totalReferrals = 0, totalEarned = 0;
     let showBalance = true;
     let myReferrals = [];
 
     const API_URL = window.location.origin;
     const TOKEN_PRICE_ETH = 0.0001;
-    const PRESALE_ADDRESS = '0x8CdeBa5Db0a4046D8BBC655244173750c7DFd553';
+    const TOKEN_ADDRESS = '0x87D336511760583B11B87866654c6f7253c1cB0D';
+    const STAKING_ADDRESS = '0xa6A074ae51f29665CDF99656D10bE933Ce257dDF';
+    const APPROVE_ABI = [{"constant":false,"inputs":[{"name":"spender","type":"address"},{"name":"amount","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"type":"function"}];
+    const STAKING_ABI = [
+        "function stake(uint256 amount) external",
+        "function withdraw(uint256 amount) external",
+        "function claimReward() external",
+        "function pendingReward(address user) view returns (uint256)",
+        "function getStakeInfo(address user) view returns (uint256 amount, uint256 rewardDebt, uint256 lastUpdate, uint256 pending)"
+    ];
 
     function showToast(msg) { let t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
+
     async function loadUserData() {
         if (!supabase) return;
-        let { data: user } = await supabase.from('users').select('*').eq('telegram_id', String(telegramId)).maybeSingle();
-        if (!user) { await supabase.from('users').insert({ telegram_id: String(telegramId), username, balance_zuz: 0 }); user = { balance_zuz: 0 }; }
-        userBalance = user.balance_zuz || 0;
-        stakingBalance = user.staked_zuz || 0;
-        stakingRewards = user.staking_rewards || 0;
+        let { data: user } = await supabase.from('users').select('balance_zuz, wallet_address').eq('telegram_id', String(telegramId)).maybeSingle();
+        userBalance = user?.balance_zuz || 0;
         document.getElementById('zuzBalanceMain').innerHTML = showBalance ? userBalance.toFixed(0) : '***';
         document.getElementById('zuzBalanceToken').innerHTML = showBalance ? userBalance.toFixed(0)+' ZUZ' : '***';
-        document.getElementById('stakingRewards').innerHTML = stakingRewards.toFixed(0)+' ZUZ';
         document.getElementById('rewardsAmount').innerText = stakingRewards.toFixed(0);
-        updateRank(userBalance);
+        await loadStakingInfo();
         await loadReferrals();
     }
-    function updateRank(balance) {
-        let rank = '🌱 Novice'; let next = 1000; let percent = (balance/1000)*100;
-        if (balance>=1000) { rank='📜 Wisdom'; next=5000; percent=(balance/5000)*100; }
-        if (balance>=5000) { rank='🌾 Prosperity'; next=10000; percent=(balance/10000)*100; }
-        if (balance>=10000) { rank='🛡️ Protection'; next=25000; percent=(balance/25000)*100; }
-        if (balance>=25000) { rank='⚡ Innovation'; next=50000; percent=(balance/50000)*100; }
-        if (balance>=50000) { rank='☯️ Harmony'; next=100000; percent=(balance/100000)*100; }
-        if (balance>=100000) { rank='⚔️ Power'; next=250000; percent=(balance/250000)*100; }
-        if (balance>=250000) { rank='👑 Immortality'; next=Infinity; percent=100; }
-        document.getElementById('currentRank').innerHTML = rank;
-        document.getElementById('nextRank').innerHTML = next===Infinity ? '👑 Бессмертие' : `→ ${rank.split(' ')[1]}: ${next.toLocaleString()} ZUZ`;
-        document.getElementById('sageProgress').style.width = Math.min(percent,100)+'%';
+
+    async function loadStakingInfo() {
+        if (!account) { stakedBalance = 0; stakingRewards = 0; return; }
+        try {
+            const res = await fetch(`${API_URL}/api/balance/${telegramId}`);
+            const data = await res.json();
+            stakedBalance = data.staked || 0;
+            stakingRewards = data.rewards || 0;
+            document.getElementById('stakedAmount').innerHTML = showBalance ? stakedBalance.toFixed(0) + ' ZUZ' : '***';
+            document.getElementById('stakingRewardsMain').innerHTML = showBalance ? stakingRewards.toFixed(0) + ' ZUZ' : '***';
+            document.getElementById('rewardsAmount').innerText = stakingRewards.toFixed(0);
+        } catch(e) { console.log(e); }
     }
+
     async function loadReferrals() {
         if (!supabase) return;
         let { data } = await supabase.from('referrals').select('*').eq('referrer_id', String(telegramId));
@@ -184,47 +167,37 @@
             <h4>🤝 Партнёрская программа</h4><p>Ваши партнёры: ${totalReferrals}<br>Заработано: ${totalEarned.toFixed(0)} ZUZ</p>
             <div class="address" id="refLinkPlace">🔗 t.me/zuzimswap_live_bot?start=ref_${telegramId}</div>
             <button id="copyRefBtn">📋 Копировать ссылку</button>
-            <div class="expand-btn" id="toggleLevels">▼ Показать уровни</div>
+            <div class="expand-btn" id="toggleLevels" style="cursor:pointer; color:#D4AF37; margin-top:10px;">▼ Показать уровни</div>
             <div id="levelsTable" style="display:none;"><table class="level-table"><tr><th>Уровень</th><th>Активных партнёров</th><th>Бонус</th></tr>
             ${[5,25,125,625,3125,15625,78125,390625,1953125,9765625].map((m,i)=>`<tr><td>${i+1}</td><td>${m}+</td><td>+${[2,4,6,8,10,12,15,18,22,30][i]}%</td></tr>`).join('')}</table></div>
         `;
         document.getElementById('copyRefBtn')?.addEventListener('click',()=>{ navigator.clipboard.writeText(`https://t.me/zuzimswap_live_bot?start=ref_${telegramId}`); showToast('Ссылка скопирована'); });
         document.getElementById('toggleLevels')?.addEventListener('click',()=>{ let tbl=document.getElementById('levelsTable'); tbl.style.display=tbl.style.display==='none'?'block':'none'; });
     }
+
+    document.getElementById('toggleBalance')?.addEventListener('click',()=>{ showBalance=!showBalance; loadUserData(); });
+    document.getElementById('toggleTotalBalance')?.addEventListener('click',()=>{ showBalance=!showBalance; loadUserData(); });
     document.getElementById('copyAddr')?.addEventListener('click',()=>{ if(account) navigator.clipboard.writeText(account); showToast('Адрес скопирован'); });
     document.getElementById('qrAddr')?.addEventListener('click',()=>{ if(account) showToast(`QR: ${account.slice(0,10)}...`); });
-    document.getElementById('toggleBalance')?.addEventListener('click',()=>{ showBalance=!showBalance; document.getElementById('zuzBalanceMain').innerHTML=showBalance?userBalance.toFixed(0):'***'; document.getElementById('zuzBalanceToken').innerHTML=showBalance?userBalance.toFixed(0)+' ZUZ':'***'; document.getElementById('totalUSD').innerHTML=showBalance?`$${(userBalance*0.01).toFixed(2)}`:'***'; });
-    document.getElementById('toggleTotalBalance')?.addEventListener('click',()=>{ showBalance=!showBalance; document.getElementById('totalUSD').innerHTML=showBalance?`$${(userBalance*0.01).toFixed(2)}`:'***'; });
     document.getElementById('siteBanner')?.addEventListener('click',()=>window.open('https://zuzim-universe.com','_blank'));
-    document.getElementById('withdrawStakeBtn')?.addEventListener('click',()=>showToast('Вывод стейкинга будет после пресейла'));
-    document.getElementById('stakeBtn')?.addEventListener('click',()=>showToast('Стейкинг ZUZ будет доступен после пресейла'));
-    document.getElementById('liquidityBtn')?.addEventListener('click',()=>window.open('https://app.uniswap.org/#/add/'+PRESALE_ADDRESS,'_blank'));
-    document.getElementById('dexBtn')?.addEventListener('click',()=>window.open('https://app.uniswap.org/#/swap?outputCurrency='+PRESALE_ADDRESS,'_blank'));
-    document.getElementById('newPartnerBtn')?.addEventListener('click',()=>{ navigator.clipboard.writeText(`https://t.me/zuzimswap_live_bot?start=ref_${telegramId}`); showToast('Ссылка скопирована'); });
-    document.getElementById('claimStakeBtn')?.addEventListener('click',()=>showToast('Награды стейкинга появятся после пресейла'));
-    document.getElementById('partnerRewardBtn')?.addEventListener('click',()=>showToast(`Партнёрские реварды: ${totalEarned.toFixed(0)} ZUZ`));
-    document.getElementById('sendBtn')?.addEventListener('click',()=>showToast('Отправка токенов будет доступна в кошельке'));
-    document.getElementById('receiveBtn')?.addEventListener('click',()=>showToast(`Ваш адрес: ${account || 'не подключён'}`));
-    document.getElementById('rewardsBtn')?.addEventListener('click',()=>showToast(`Ваши реварды: ${stakingRewards.toFixed(0)} ZUZ`));
-    document.getElementById('membersBtn')?.addEventListener('click',()=>showToast(`Участников: ${totalReferrals}`));
-    document.getElementById('partnersBtn')?.addEventListener('click',()=>{ document.querySelector('.tab[data-tab="partners"]').click(); });
-    document.querySelectorAll('.tab').forEach(tab=>{ tab.addEventListener('click',()=>{ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); tab.classList.add('active'); document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active')); document.getElementById(tab.dataset.tab+'Tab').classList.add('active'); }); });
 
     async function connectWallet() {
         if (window.ethereum) {
             try {
-                let accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                 account = accounts[0];
                 web3 = new Web3(window.ethereum);
                 document.getElementById('walletAddressShow').innerHTML = account.slice(0,6)+'...'+account.slice(-4);
                 document.getElementById('connectBtn').innerHTML = '✅ Подключён';
                 showToast('Кошелёк подключён');
                 if (supabase) await supabase.from('users').upsert({ telegram_id: String(telegramId), wallet_address: account });
-                await loadBalancesWeb3();
+                loadUserData();
+                loadBalancesWeb3();
             } catch(e) { showToast('Ошибка подключения'); }
         } else { showToast('Установите MetaMask'); }
     }
     document.getElementById('connectBtn').onclick = connectWallet;
+
     async function loadBalancesWeb3() {
         if (!web3 || !account) return;
         let eth = await web3.eth.getBalance(account); eth = parseFloat(web3.utils.fromWei(eth, 'ether'));
@@ -233,7 +206,64 @@
         let totalUSD = eth*3500 + userBalance*0.01;
         document.getElementById('totalUSD').innerHTML = showBalance ? `$${totalUSD.toFixed(2)}` : '***';
     }
-    setInterval(()=>{ if(account) loadBalancesWeb3(); }, 10000);
+
+    // === СТЕЙКИНГ ===
+    document.getElementById('stakeBtn')?.addEventListener('click', async () => {
+        if (!account) { showToast('Подключи кошелёк'); return; }
+        const amount = prompt('Сколько ZUZ застейкать? (доступно: ' + userBalance.toFixed(0) + ')', '100');
+        if (!amount || isNaN(amount) || amount <= 0) return;
+        if (amount > userBalance) { showToast('Недостаточно ZUZ'); return; }
+        const amountWei = web3.utils.toWei(amount.toString(), 'ether');
+        try {
+            const tokenContract = new web3.eth.Contract(APPROVE_ABI, TOKEN_ADDRESS);
+            showToast('⏳ Одобрение токена...');
+            await tokenContract.methods.approve(STAKING_ADDRESS, amountWei).send({ from: account });
+            const stakingContract = new web3.eth.Contract(STAKING_ABI, STAKING_ADDRESS);
+            showToast('⏳ Отправка в стейкинг...');
+            await stakingContract.methods.stake(amountWei).send({ from: account });
+            showToast(`✅ Застейкано ${amount} ZUZ!`);
+            loadUserData();
+        } catch(e) { showToast('Ошибка: ' + e.message); }
+    });
+
+    document.getElementById('claimStakeBtn')?.addEventListener('click', async () => {
+        if (!account) { showToast('Подключи кошелёк'); return; }
+        try {
+            const stakingContract = new web3.eth.Contract(STAKING_ABI, STAKING_ADDRESS);
+            showToast('⏳ Забираем награды...');
+            await stakingContract.methods.claimReward().send({ from: account });
+            showToast('✅ Награды получены!');
+            loadUserData();
+        } catch(e) { showToast('Ошибка: ' + e.message); }
+    });
+
+    document.getElementById('withdrawStakeBtn')?.addEventListener('click', async () => {
+        if (!account) { showToast('Подключи кошелёк'); return; }
+        const amount = prompt('Сколько ZUZ вывести из стейкинга? (доступно: ' + stakedBalance.toFixed(0) + ')', stakedBalance.toFixed(0));
+        if (!amount || isNaN(amount) || amount <= 0) return;
+        const amountWei = web3.utils.toWei(amount.toString(), 'ether');
+        try {
+            const stakingContract = new web3.eth.Contract(STAKING_ABI, STAKING_ADDRESS);
+            showToast('⏳ Выводим...');
+            await stakingContract.methods.withdraw(amountWei).send({ from: account });
+            showToast(`✅ Выведено ${amount} ZUZ!`);
+            loadUserData();
+        } catch(e) { showToast('Ошибка: ' + e.message); }
+    });
+
+    document.getElementById('liquidityBtn')?.addEventListener('click',()=>window.open('https://app.uniswap.org/#/add/'+TOKEN_ADDRESS,'_blank'));
+    document.getElementById('dexBtn')?.addEventListener('click',()=>window.open('https://app.uniswap.org/#/swap?outputCurrency='+TOKEN_ADDRESS,'_blank'));
+    document.getElementById('newPartnerBtn')?.addEventListener('click',()=>{ navigator.clipboard.writeText(`https://t.me/zuzimswap_live_bot?start=ref_${telegramId}`); showToast('Ссылка скопирована'); });
+    document.getElementById('partnerRewardBtn')?.addEventListener('click',()=>showToast(`Партнёрские реварды: ${totalEarned.toFixed(0)} ZUZ`));
+    document.getElementById('sendBtn')?.addEventListener('click',()=>showToast('Отправка токенов будет доступна в кошельке'));
+    document.getElementById('receiveBtn')?.addEventListener('click',()=>showToast(`Ваш адрес: ${account || 'не подключён'}`));
+    document.getElementById('rewardsBtn')?.addEventListener('click',()=>showToast(`Реварды стейкинга: ${stakingRewards.toFixed(0)} ZUZ`));
+    document.getElementById('membersBtn')?.addEventListener('click',()=>showToast(`Всего партнёров: ${totalReferrals}`));
+    document.getElementById('partnersBtn')?.addEventListener('click',()=>{ document.querySelector('.tab[data-tab="partners"]').click(); });
+
+    document.querySelectorAll('.tab').forEach(tab=>{ tab.addEventListener('click',()=>{ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active')); tab.classList.add('active'); document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active')); document.getElementById(tab.dataset.tab+'Tab').classList.add('active'); if(tab.dataset.tab === 'partners') loadReferrals(); }); });
+
+    setInterval(()=>{ if(account) loadBalancesWeb3(); }, 15000);
     loadUserData();
 </script>
 </body>
