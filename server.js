@@ -18,9 +18,13 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // === WEB3 ===
 const web3 = new Web3(process.env.RPC_URL || 'https://eth.llamarpc.com');
-const TOKEN_ADDRESS = '0x87D336511760583B11B87866654c6f7253c1cB0D';
+
+// === ОБНОВЛЕННЫЕ АДРЕСА ===
+const TOKEN_ADDRESS = '0xF357E7E28Bdf3EA7BcB8336C578Be6EaE95201Df';
 const PRESALE_ADDRESS = '0x8CdeBa5Db0a4046D8BBC655244173750c7DFd553';
-const STAKING_ADDRESS = '0xa6A074ae51f29665CDF99656D10bE933Ce257dDF';
+const STAKING_ADDRESS = '0xa70A217534C944F50cDdc526a5ED8724D9379C53';
+// ===========================
+
 const TOKEN_PRICE_ETH = 0.0001;
 
 // === ABI ===
