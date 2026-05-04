@@ -244,7 +244,7 @@
     document.getElementById('buyEthBtn')?.addEventListener('click', async () => {
         if (!account) { showToast('Подключи кошелёк'); return; }
         const eth = parseFloat(document.getElementById('buyEthAmount').value);
-        if (isNaN(eth) || eth < 0.01) { showToast('Минимум 0.01 ETH'); return; }
+        if (eth < 0.0015) { showToast('Минимум 0.0015 ETH (~$5)'); return; }
         try {
             const tx = await window.ethereum.request({
                 method: 'eth_sendTransaction',
