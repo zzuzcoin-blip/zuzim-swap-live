@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>ZUZIM Swap | USDT → ZUZ</title>
+    <title>ZUZIM Swap | Купить и стейкать</title>
     <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
     <style>
-        /* Все стили остаются как в прошлой версии — я не меняю */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background: #0A0A0A; color: white; font-family: 'Inter', system-ui, sans-serif; padding: 16px; padding-bottom: 90px; }
         .container { max-width: 500px; margin: 0 auto; }
@@ -56,7 +55,7 @@
         <button id="connectBtn" style="width: auto; padding: 8px 16px; margin: 0; background: #2A2A2A; color: #D4AF37; border: 1px solid #D4AF37;">🔌 Кошелёк</button>
     </div>
 
-    <!-- ПОКУПКА ЗА ETH -->
+    <!-- КАРТОЧКА ПОКУПКИ (ЯВНАЯ КНОПКА) -->
     <div class="buy-card">
         <div class="flex-between"><span>🪙 Купить ZUZ за ETH</span><span class="gold-text">1 ZUZ = 0.0001 ETH</span></div>
         <div class="input-group">
@@ -66,17 +65,6 @@
         <div class="flex-between"><span>Вы получите:</span><strong class="gold-text" id="buyReceiveZuz">0 ZUZ</strong></div>
     </div>
 
-    <!-- ПОКУПКА ЗА USDT (АВТОМАТИЧЕСКИ ЧЕРЕЗ КОНТРАКТ) -->
-    <div class="buy-card">
-        <div class="flex-between"><span>💵 Купить ZUZ за USDT</span><span class="gold-text" id="usdtRateDisplay">1 ZUZ ≈ 0.35 USDT</span></div>
-        <div class="input-group">
-            <input type="number" id="buyUsdtAmount" placeholder="Сумма в USDT (мин 10)" step="10">
-            <button id="buyUsdtBtn" class="btn-small">Купить</button>
-        </div>
-        <div class="flex-between"><span>Вы получите:</span><strong class="gold-text" id="buyReceiveZuzUsdt">0 ZUZ</strong></div>
-    </div>
-
-    <!-- ОСТАЛЬНОЙ ИНТЕРФЕЙС (баланс, стейкинг, кнопки) -->
     <div class="top-stats">
         <div class="stat-card" id="rewardsBtn"><div class="stat-value" id="rewardsAmount">0</div><div class="stat-label">Реварды (ZUZ)</div></div>
         <div class="stat-card" id="membersBtn"><div class="stat-value" id="membersCount">0</div><div class="stat-label">Участники</div></div>
@@ -135,18 +123,15 @@
     let supabase;
     try { supabase = window.supabaseJs?.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) { console.log('Supabase not loaded'); }
 
-    const TOKEN_ADDRESS = '0x87D336511760583B11B87866654c6f7253c1cB0D';
+    // === ОБНОВЛЕННЫЕ АДРЕСА ===
+    const TOKEN_ADDRESS = '0xF357E7E28Bdf3EA7BcB8336C578Be6EaE95201Df';
     const PRESALE_ADDRESS = '0x8CdeBa5Db0a4046D8BBC655244173750c7DFd553';
-    const STAKING_ADDRESS = '0xa6A074ae51f29665CDF99656D10bE933Ce257dDF';
-    const USDT_ADDRESS = '0xdAC17F958D2ee523a2206206994597C13D831ec7';
-    const USDT_SWAP_CONTRACT = '0x4E779253aA32F8De44AfBf37444c7Ff3af214155';
-    const TOKEN_PRICE_ETH = 0.0001;
-    const USDT_RATE = 0.35; // 1 ZUZ = 0.35 USDT
+    const STAKING_ADDRESS = '0xa70A217534C944F50cDdc526a5ED8724D9379C53';
+    // ===========================
 
+    const TOKEN_PRICE_ETH = 0.0001;
     const TOKEN_ABI = [{"constant":true,"inputs":[{"name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"type":"function"}];
     const APPROVE_ABI = [{"constant":false,"inputs":[{"name":"spender","type":"address"},{"name":"amount","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"type":"function"}];
-    const USDT_ABI = [{"constant":true,"inputs":[{"name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"spender","type":"address"},{"name":"amount","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"type":"function"}];
-    const SWAP_ABI = [{"inputs":[{"name":"usdtAmount","type":"uint256"}],"name":"swap","outputs":[],"stateMutability":"nonpayable","type":"function"}];
     const STAKING_ABI = [
         "function stake(uint256 amount) external",
         "function withdraw(uint256 amount) external",
@@ -164,6 +149,7 @@
     let userBalance = 0, stakedBalance = 0, stakingRewards = 0, totalReferrals = 0, totalEarned = 0;
     let showBalance = true;
     let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const API_URL = window.location.origin;
 
     function showToast(msg) { let t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 3000); }
 
@@ -248,13 +234,13 @@
             <button id="copyRefBtn">📋 Копировать ссылку</button>
             <div class="expand-btn" id="toggleLevels" style="cursor:pointer; color:#D4AF37; margin-top:10px;">▼ Показать уровни</div>
             <div id="levelsTable" style="display:none;"><table class="level-table"><tr><th>Уровень</th><th>Активных партнёров</th><th>Бонус</th></tr>
-            ${[5,25,125,625,3125,15625,78125,390625,1953125,9765625].map((m,i)=>`<tr><td>${i+1}</td><td>${m}+$                                                                -4)`).join('')}</table></div>
+            ${[5,25,125,625,3125,15625,78125,390625,1953125,9765625].map((m,i)=>`<tr><td>${i+1}</td><td>${m}+</td><td>+${[2,4,6,8,10,12,15,18,22,30][i]}%</td></tr>`).join('')}</table></div>
         `;
         document.getElementById('copyRefBtn')?.addEventListener('click',()=>{ navigator.clipboard.writeText(`https://t.me/zuzimswap_live_bot?start=ref_${telegramId}`); showToast('Ссылка скопирована'); });
         document.getElementById('toggleLevels')?.addEventListener('click',()=>{ let tbl=document.getElementById('levelsTable'); tbl.style.display=tbl.style.display==='none'?'block':'none'; });
     }
 
-    // ПОКУПКА ЗА ETH
+    // ПОКУПКА ZUZ ЗА ETH
     document.getElementById('buyEthBtn')?.addEventListener('click', async () => {
         if (!account) { showToast('Подключи кошелёк'); return; }
         const eth = parseFloat(document.getElementById('buyEthAmount').value);
@@ -275,33 +261,7 @@
         document.getElementById('buyReceiveZuz').innerText = (eth / TOKEN_PRICE_ETH).toFixed(0) + ' ZUZ';
     });
 
-    // ПОКУПКА ЗА USDT (автоматически через контракт)
-    document.getElementById('buyUsdtAmount')?.addEventListener('input', () => {
-        const usdt = parseFloat(document.getElementById('buyUsdtAmount').value) || 0;
-        const zuz = usdt / USDT_RATE;
-        document.getElementById('buyReceiveZuzUsdt').innerText = zuz.toFixed(0) + ' ZUZ';
-    });
-
-    document.getElementById('buyUsdtBtn')?.addEventListener('click', async () => {
-        if (!account) { showToast('Подключи кошелёк'); return; }
-        const usdt = parseFloat(document.getElementById('buyUsdtAmount').value);
-        if (isNaN(usdt) || usdt < 10) { showToast('Минимум 10 USDT'); return; }
-        const usdtWei = web3.utils.toWei(usdt.toString(), 'ether');
-        try {
-            const usdtContract = new web3.eth.Contract(USDT_ABI, USDT_ADDRESS);
-            showToast('⏳ Одобрение USDT...');
-            await usdtContract.methods.approve(USDT_SWAP_CONTRACT, usdtWei).send({ from: account });
-            const swapContract = new web3.eth.Contract(SWAP_ABI, USDT_SWAP_CONTRACT);
-            showToast('⏳ Обмен USDT → ZUZ...');
-            await swapContract.methods.swap(usdtWei).send({ from: account });
-            showToast(`✅ Куплено ${(usdt / USDT_RATE).toFixed(0)} ZUZ!`);
-            document.getElementById('buyUsdtAmount').value = '';
-            document.getElementById('buyReceiveZuzUsdt').innerText = '0 ZUZ';
-            setTimeout(() => loadBalancesFromBlockchain(), 3000);
-        } catch(e) { showToast('Ошибка: ' + e.message); }
-    });
-
-    // СТЕЙКИНГ (как был)
+    // СТЕЙКИНГ
     document.getElementById('stakeBtn')?.addEventListener('click', async () => {
         if (!account) { showToast('Подключи кошелёк'); return; }
         const amount = prompt('Сколько ZUZ застейкать? (доступно: ' + userBalance.toFixed(0) + ')', '100');
