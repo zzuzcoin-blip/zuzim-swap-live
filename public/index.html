@@ -239,26 +239,34 @@
         document.getElementById('toggleLevels')?.addEventListener('click',()=>{ let tbl=document.getElementById('levelsTable'); tbl.style.display=tbl.style.display==='none'?'block':'none'; });
     }
 
-    // ПОКУПКА ZUZ ЗА ETH
-    document.getElementById('buyEthBtn')?.addEventListener('click', async () => {
-        if (!account) { showToast('Подключи кошелёк'); return; }
-        const eth = parseFloat(document.getElementById('buyEthAmount').value);
-        if (eth < 0.0015) { showToast('Минимум 0.0015 ETH (~$5)'); return; }
-        try {
-            const tx = await window.ethereum.request({
-                method: 'eth_sendTransaction',
-                params: [{ from: account, to: PRESALE_ADDRESS, value: web3.utils.toWei(eth.toString(), 'ether') }]
-            });
-            showToast(`✅ Куплено ${(eth / TOKEN_PRICE_ETH).toFixed(0)} ZUZ!`);
-            document.getElementById('buyEthAmount').value = '';
-            document.getElementById('buyReceiveZuz').innerText = '0 ZUZ';
-            setTimeout(() => loadBalancesFromBlockchain(), 3000);
-        } catch(e) { showToast('Ошибка транзакции'); }
-    });
-    document.getElementById('buyEthAmount')?.addEventListener('input', () => {
-        const eth = parseFloat(document.getElementById('buyEthAmount').value) || 0;
-        document.getElementById('buyReceiveZuz').innerText = (eth / TOKEN_PRICE_ETH).toFixed(0) + ' ZUZ';
-    });
+    // ПОКУПКА ZUZ ЗА ETH (по количеству ZUZ)
+document.getElementById('buyEthBtn')?.addEventListener('click', async () => {
+    if (!account) { showToast('Подключи кошелёк'); return; }
+    const zuzAmount = parseFloat(document.getElementById('buyZuzAmount').value);
+    if (isNaN(zuzAmount) || zuzAmount < 15) { showToast('Минимум 15 ZUZ (~0.0015 ETH)'); return; }
+    
+    const ethAmount = zuzAmount * TOKEN_PRICE_ETH; // 15 * 0.0001 = 0.0015 ETH
+    
+    try {
+        const tx = await window.ethereum.request({
+            method: 'eth_sendTransaction',
+            params: [{ from: account, to: PRESALE_ADDRESS, value: web3.utils.toWei(ethAmount.toString(), 'ether') }]
+        });
+        showToast(`✅ Куплено ${zuzAmount} ZUZ!`);
+        document.getElementById('buyZuzAmount').value = '';
+        document.getElementById('buyCostEth').innerText = '0 ETH';
+        setTimeout(() => loadBalancesFromBlockchain(), 3000);
+    } catch(e) { 
+        console.error(e);
+        showToast('Ошибка транзакции'); 
+    }
+});
+
+document.getElementById('buyZuzAmount')?.addEventListener('input', () => {
+    const zuz = parseFloat(document.getElementById('buyZuzAmount').value) || 0;
+    const eth = zuz * TOKEN_PRICE_ETH;
+    document.getElementById('buyCostEth').innerText = eth.toFixed(6) + ' ETH';
+});
 
     // СТЕЙКИНГ
     document.getElementById('stakeBtn')?.addEventListener('click', async () => {
