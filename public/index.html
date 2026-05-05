@@ -241,27 +241,39 @@
     }
 
     // ========== ПОКУПКА ZUZ ПО КОЛИЧЕСТВУ (ИСПРАВЛЕНО) ==========
-    document.getElementById('buyEthBtn')?.addEventListener('click', async () => {
-        if (!account) { showToast('Подключи кошелёк'); return; }
-        const zuzAmount = parseFloat(document.getElementById('buyZuzAmount').value);
-        if (isNaN(zuzAmount) || zuzAmount < 15) { showToast('Минимум 15 ZUZ (~0.0015 ETH)'); return; }
-        
-        const ethAmount = zuzAmount * TOKEN_PRICE_ETH; // 15 ZUZ = 0.0015 ETH
-        
-        try {
-            const tx = await window.ethereum.request({
-                method: 'eth_sendTransaction',
-                params: [{ from: account, to: PRESALE_ADDRESS, value: web3.utils.toWei(ethAmount.toString(), 'ether') }]
-            });
-            showToast(`✅ Куплено ${zuzAmount} ZUZ!`);
-            document.getElementById('buyZuzAmount').value = '15';
-            document.getElementById('buyCostEth').innerText = '0 ETH';
-            setTimeout(() => loadBalancesFromBlockchain(), 3000);
-        } catch(e) { 
-            console.error(e);
-            showToast('Ошибка транзакции: ' + (e.message || 'Unknown error')); 
-        }
-    });
+function toWei(amount) {
+    if (web3 && web3.utils) {
+        return web3.utils.toWei(amount.toString(), 'ether');
+    }
+    // Ручной расчёт в wei (18 нулей)
+    const weiAmount = BigInt(Math.floor(amount * 1e18));
+    return weiAmount.toString();
+}
+
+document.getElementById('buyEthBtn')?.addEventListener('click', async () => {
+    if (!account) { showToast('Подключи кошелёк'); return; }
+    const zuzAmount = parseFloat(document.getElementById('buyZuzAmount').value);
+    if (isNaN(zuzAmount) || zuzAmount < 15) { showToast('Минимум 15 ZUZ (~0.0015 ETH)'); return; }
+    
+    const ethAmount = zuzAmount * TOKEN_PRICE_ETH; // 15 ZUZ = 0.0015 ETH
+    const weiValue = toWei(ethAmount);
+    
+    console.log(`Покупка: ${zuzAmount} ZUZ = ${ethAmount} ETH = ${weiValue} wei`);
+    
+    try {
+        const tx = await window.ethereum.request({
+            method: 'eth_sendTransaction',
+            params: [{ from: account, to: PRESALE_ADDRESS, value: weiValue }]
+        });
+        showToast(`✅ Куплено ${zuzAmount} ZUZ!`);
+        document.getElementById('buyZuzAmount').value = '15';
+        document.getElementById('buyCostEth').innerText = '0 ETH';
+        setTimeout(() => loadBalancesFromBlockchain(), 3000);
+    } catch(e) { 
+        console.error(e);
+        showToast('Ошибка транзакции: ' + (e.message || 'Unknown error')); 
+    }
+});
 
     document.getElementById('buyZuzAmount')?.addEventListener('input', () => {
         const zuz = parseFloat(document.getElementById('buyZuzAmount').value) || 0;
