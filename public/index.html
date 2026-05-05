@@ -240,38 +240,30 @@
         document.getElementById('toggleLevels')?.addEventListener('click',()=>{ let tbl=document.getElementById('levelsTable'); tbl.style.display=tbl.style.display==='none'?'block':'none'; });
     }
 
-    // ========== ПОКУПКА ZUZ ПО КОЛИЧЕСТВУ (ИСПРАВЛЕНО) ==========
-function toWei(amount) {
-    if (web3 && web3.utils) {
-        return web3.utils.toWei(amount.toString(), 'ether');
-    }
-    // Ручной расчёт в wei (18 нулей)
-    const weiAmount = BigInt(Math.floor(amount * 1e18));
-    return weiAmount.toString();
-}
-
+    // ========== ПОКУПКА ZUZ — ЖЁСТКО 0.0015 ETH ==========
 document.getElementById('buyEthBtn')?.addEventListener('click', async () => {
-    if (!account) { showToast('Подключи кошелёк'); return; }
-    const zuzAmount = parseFloat(document.getElementById('buyZuzAmount').value);
-    if (isNaN(zuzAmount) || zuzAmount < 15) { showToast('Минимум 15 ZUZ (~0.0015 ETH)'); return; }
+    if (!account) { 
+        alert('Подключи кошелёк!'); 
+        return; 
+    }
     
-    const ethAmount = zuzAmount * TOKEN_PRICE_ETH; // 15 ZUZ = 0.0015 ETH
-    const weiValue = toWei(ethAmount);
+    // ЖЁСТКО 0.0015 ETH — ИГНОРИРУЕМ ВСЁ ОСТАЛЬНОЕ
+    const ethAmount = 0.0015;
+    const weiValue = (ethAmount * 1e18).toString();
     
-    console.log(`Покупка: ${zuzAmount} ZUZ = ${ethAmount} ETH = ${weiValue} wei`);
+    console.log('🔍 Отправляем:', ethAmount, 'ETH =', weiValue, 'wei');
+    alert('Отправляем ' + ethAmount + ' ETH');
     
     try {
         const tx = await window.ethereum.request({
             method: 'eth_sendTransaction',
             params: [{ from: account, to: PRESALE_ADDRESS, value: weiValue }]
         });
-        showToast(`✅ Куплено ${zuzAmount} ZUZ!`);
-        document.getElementById('buyZuzAmount').value = '15';
-        document.getElementById('buyCostEth').innerText = '0 ETH';
+        alert('✅ Куплено 15 ZUZ!');
         setTimeout(() => loadBalancesFromBlockchain(), 3000);
     } catch(e) { 
         console.error(e);
-        showToast('Ошибка транзакции: ' + (e.message || 'Unknown error')); 
+        alert('Ошибка: ' + e.message);
     }
 });
 
