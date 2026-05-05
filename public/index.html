@@ -55,14 +55,14 @@
         <button id="connectBtn" style="width: auto; padding: 8px 16px; margin: 0; background: #2A2A2A; color: #D4AF37; border: 1px solid #D4AF37;">🔌 Кошелёк</button>
     </div>
 
-    <!-- КАРТОЧКА ПОКУПКИ (ПО КОЛИЧЕСТВУ ZUZ) -->
+    <!-- КАРТОЧКА ПОКУПКИ (ПО КОЛИЧЕСТВУ ZUZ, КАК В ВИЗИТКЕ) -->
     <div class="buy-card">
         <div class="flex-between"><span>🪙 Купить ZUZ за ETH</span><span class="gold-text">1 ZUZ = 0.0001 ETH</span></div>
         <div class="input-group">
             <input type="number" id="buyZuzAmount" placeholder="Количество ZUZ (мин 15)" step="1" min="15" value="15">
             <button id="buyEthBtn" class="btn-small">Купить</button>
         </div>
-        <div class="flex-between"><span>Стоимость:</span><strong class="gold-text" id="buyCostEth">0 ETH</strong></div>
+        <div class="flex-between"><span>Стоимость:</span><strong class="gold-text" id="buyCostEth">0.001500 ETH</strong></div>
     </div>
 
     <div class="top-stats">
@@ -123,11 +123,11 @@
     let supabase;
     try { supabase = window.supabaseJs?.createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) { console.log('Supabase not loaded'); }
 
-    // === ОБНОВЛЕННЫЕ АДРЕСА ===
+    // === АДРЕСА (ТЕ ЖЕ, ЧТО В ВИЗИТКЕ) ===
     const TOKEN_ADDRESS = '0xF357E7E28Bdf3EA7BcB8336C578Be6EaE95201Df';
     const PRESALE_ADDRESS = '0x0021dAB69aC9131aF487086758C74f3aA19A7eC8';
     const STAKING_ADDRESS = '0xa70A217534C944F50cDdc526a5ED8724D9379C53';
-    // ===========================
+    // ===================================
 
     const TOKEN_PRICE_ETH = 0.0001;
     const TOKEN_ABI = [{"constant":true,"inputs":[{"name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"type":"function"}];
@@ -234,51 +234,42 @@
             <button id="copyRefBtn">📋 Копировать ссылку</button>
             <div class="expand-btn" id="toggleLevels" style="cursor:pointer; color:#D4AF37; margin-top:10px;">▼ Показать уровни</div>
             <div id="levelsTable" style="display:none;"><table class="level-table"><tr><th>Уровень</th><th>Активных партнёров</th><th>Бонус</th></tr>
-            ${[5,25,125,625,3125,15625,78125,390625,1953125,9765625].map((m,i)=>`<tr><td>${i+1}</td><td>${m}+</td><td>+${[2,4,6,8,10,12,15,18,22,30][i]}%</td></tr>`).join('')}</table></div>
+            ${[5,25,125,625,3125,15625,78125,390625,1953125,9765625].map((m,i)=>`<tr><td>${i+1}</td><td>${m}+</td><td>+${[2,4,6,8,10,12,15,18,22,30][i]}%</tr></tr>`).join('')}</table></div>
         `;
         document.getElementById('copyRefBtn')?.addEventListener('click',()=>{ navigator.clipboard.writeText(`https://t.me/zuzimswap_live_bot?start=ref_${telegramId}`); showToast('Ссылка скопирована'); });
         document.getElementById('toggleLevels')?.addEventListener('click',()=>{ let tbl=document.getElementById('levelsTable'); tbl.style.display=tbl.style.display==='none'?'block':'none'; });
     }
 
-    // ========== ПОКУПКА ZUZ ПО КОЛИЧЕСТВУ (КОД ИЗ ВИЗИТКИ) ==========
-document.getElementById('buyEthBtn')?.addEventListener('click', async () => {
-    if (!account) { showToast('Подключи кошелёк'); return; }
-    
-    const zuzAmount = parseFloat(document.getElementById('buyZuzAmount').value);
-    if (isNaN(zuzAmount) || zuzAmount < 15) { 
-        showToast('Минимум 15 ZUZ (~0.0015 ETH)'); 
-        return; 
-    }
-    
-    const ethAmount = zuzAmount * 0.0001; // 15 ZUZ = 0.0015 ETH
-    
-    try {
-        const tx = await window.ethereum.request({
-            method: 'eth_sendTransaction',
-            params: [{ 
-                from: account, 
-                to: PRESALE_ADDRESS, 
-                value: web3.utils.toWei(ethAmount.toString(), 'ether') 
-            }]
-        });
-        showToast(`✅ Куплено ${zuzAmount} ZUZ!`);
-        document.getElementById('buyZuzAmount').value = '15';
-        document.getElementById('buyCostEth').innerText = '0.001500 ETH';
-        setTimeout(() => loadBalancesFromBlockchain(), 3000);
-    } catch(e) { 
-        console.error(e);
-        showToast('Ошибка: ' + e.message); 
-    }
-});
+    // ========== ПОКУПКА ZUZ ПО КОЛИЧЕСТВУ (ТОЧНЫЙ КОД ИЗ ВИЗИТКИ) ==========
+    document.getElementById('buyEthBtn')?.addEventListener('click', async () => {
+        if (!account) { showToast('Подключи кошелёк'); return; }
+        const zuzAmount = parseFloat(document.getElementById('buyZuzAmount').value);
+        if (isNaN(zuzAmount) || zuzAmount < 15) { showToast('Минимум 15 ZUZ (~0.0015 ETH)'); return; }
+        
+        const ethAmount = zuzAmount * TOKEN_PRICE_ETH;
+        
+        try {
+            const tx = await window.ethereum.request({
+                method: 'eth_sendTransaction',
+                params: [{ from: account, to: PRESALE_ADDRESS, value: web3.utils.toWei(ethAmount.toString(), 'ether') }]
+            });
+            showToast(`✅ Куплено ${zuzAmount} ZUZ!`);
+            document.getElementById('buyZuzAmount').value = '15';
+            document.getElementById('buyCostEth').innerText = '0 ETH';
+            setTimeout(() => loadBalancesFromBlockchain(), 3000);
+        } catch(e) { 
+            console.error(e);
+            showToast('Ошибка транзакции: ' + (e.message || 'Unknown error')); 
+        }
+    });
 
-document.getElementById('buyZuzAmount')?.addEventListener('input', () => {
-    const zuz = parseFloat(document.getElementById('buyZuzAmount').value) || 0;
-    const eth = zuz * 0.0001;
-    document.getElementById('buyCostEth').innerText = eth.toFixed(6) + ' ETH';
-});
+    document.getElementById('buyZuzAmount')?.addEventListener('input', () => {
+        const zuz = parseFloat(document.getElementById('buyZuzAmount').value) || 0;
+        const eth = zuz * TOKEN_PRICE_ETH;
+        document.getElementById('buyCostEth').innerText = eth.toFixed(6) + ' ETH';
+    });
     // =========================================================
 
-    // Стейкинг и остальные функции
     document.getElementById('stakeBtn')?.addEventListener('click', async () => {
         if (!account) { showToast('Подключи кошелёк'); return; }
         const amount = prompt('Сколько ZUZ застейкать? (доступно: ' + userBalance.toFixed(0) + ')', '100');
@@ -345,10 +336,6 @@ document.getElementById('buyZuzAmount')?.addEventListener('input', () => {
     setInterval(()=>{ if(account) loadBalancesFromBlockchain(); }, 15000);
     loadBalancesFromBlockchain();
     if (supabase) loadReferrals();
-    
-    // Устанавливаем значение по умолчанию 15 ZUZ
-    document.getElementById('buyZuzAmount').value = '15';
-    document.getElementById('buyCostEth').innerText = '0.001500 ETH';
 </script>
 </body>
 </html>
