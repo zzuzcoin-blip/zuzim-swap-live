@@ -240,30 +240,29 @@
         document.getElementById('toggleLevels')?.addEventListener('click',()=>{ let tbl=document.getElementById('levelsTable'); tbl.style.display=tbl.style.display==='none'?'block':'none'; });
     }
 
-    // ========== ПОКУПКА ZUZ — ЖЁСТКО 0.0015 ETH ==========
+    // ========== ПОКУПКА ZUЗ — ЖЁСТКО 0.0015 ETH ==========
 document.getElementById('buyEthBtn')?.addEventListener('click', async () => {
     if (!account) { 
-        alert('Подключи кошелёк!'); 
+        alert('Сначала подключи кошелёк!'); 
         return; 
     }
     
-    // ЖЁСТКО 0.0015 ETH — ИГНОРИРУЕМ ВСЁ ОСТАЛЬНОЕ
+    // ЖЁСТКО 0.0015 ETH
     const ethAmount = 0.0015;
     const weiValue = (ethAmount * 1e18).toString();
     
-    console.log('🔍 Отправляем:', ethAmount, 'ETH =', weiValue, 'wei');
-    alert('Отправляем ' + ethAmount + ' ETH');
+    console.log('Отправляем:', ethAmount, 'ETH =', weiValue, 'wei');
     
     try {
         const tx = await window.ethereum.request({
             method: 'eth_sendTransaction',
             params: [{ from: account, to: PRESALE_ADDRESS, value: weiValue }]
         });
-        alert('✅ Куплено 15 ZUZ!');
+        alert(`✅ Куплено ${ethAmount / 0.0001} ZUZ!`);
         setTimeout(() => loadBalancesFromBlockchain(), 3000);
     } catch(e) { 
         console.error(e);
-        alert('Ошибка: ' + e.message);
+        alert('Ошибка: ' + e.message); 
     }
 });
 
